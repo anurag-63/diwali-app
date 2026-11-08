@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Confetti from "react-confetti";
-import { useParams } from "next/navigation"; // 1. Import the client-side hook
+import { useParams } from "next/navigation";
 
-export default function GreetingPage() {
-  // 2. Safely grab the code from the URL using the hook
+// 1. Create an inner component that handles the dynamic URL logic
+function GreetingContent() {
   const params = useParams();
   const code = params?.code as string;
   
@@ -15,7 +15,6 @@ export default function GreetingPage() {
     if (!code) return;
 
     try {
-      // 3. Clean the URL-encoded characters (like %3D back to =) before decoding
       const cleanCode = decodeURIComponent(code);
       setDecodedName(atob(cleanCode));
     } catch (e) {
@@ -26,7 +25,7 @@ export default function GreetingPage() {
   }, [code]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white text-center p-4">
+    <>
       {windowSize.width > 0 && (
         <Confetti width={windowSize.width} height={windowSize.height} colors={['#ffaa00', '#ff0000', '#00ff00']} />
       )}
@@ -40,6 +39,17 @@ export default function GreetingPage() {
       <p className="text-4xl md:text-6xl font-bold mt-8 text-yellow-300 capitalize">
         {decodedName}
       </p>
+    </>
+  );
+}
+
+// 2. The main page wraps the inner component in a Suspense boundary
+export default function GreetingPage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white text-center p-4">
+      <Suspense fallback={<div className="text-2xl font-bold text-orange-400 animate-pulse">Loading Greeting...</div>}>
+        <GreetingContent />
+      </Suspense>
     </div>
   );
 }
